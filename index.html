@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Milk Diary Pro</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4F46E5">
+    
+    <!-- External Libraries for New Features -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+    <!-- 0. SETUP SCREEN -->
+    <div id="setupScreen" class="setup-overlay">
+        <div class="card setup-card">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="color: var(--primary); font-size: 24px;">Dairy Setup</h2>
+                <p style="color: var(--text-muted); font-size: 14px; margin-top: 5px;">Apni dairy ke details set karein</p>
+            </div>
+            
+            <div class="form-group">
+                <label>Dairy Name</label>
+                <input type="text" id="setupDairyName" placeholder="e.g. Sharma Dairy">
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Cow Rate (₹/L)</label>
+                    <input type="number" id="setupCowPrice" placeholder="50">
+                </div>
+                <div class="form-group">
+                    <label>Buffalo Rate (₹/L)</label>
+                    <input type="number" id="setupBuffaloPrice" placeholder="65">
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" onclick="completeSetup()" style="margin-top: 10px;">Save & Start App ➔</button>
+        </div>
+    </div>
+
+    <header id="appHeader" class="no-print">Dashboard</header>
+  
+    <!-- 1. DASHBOARD SCREEN -->
+    <div id="dashboardScreen" class="screen no-print">
+        <div class="card gradient-card">
+            <h3 id="displayDairyName">Today's Overview</h3>
+            <p style="font-size: 12px; opacity: 0.9; margin-bottom: 10px;">Cow: ₹<span id="dashCowRate">0</span>/L | Buffalo: ₹<span id="dashBuffRate">0</span>/L</p>
+            <div class="stats-grid">
+                <div>
+                    <span class="stat-label">Total Milk</span>
+                    <span class="stat-value"><span id="dashTodayMilk">0</span> L</span>
+                </div>
+                <div>
+                    <span class="stat-label">Est. Earning</span>
+                    <span class="stat-value">₹<span id="dashTodayEarning">0</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Profit & Expense Overview -->
+        <div class="card">
+            <div class="flex-between mb-2">
+                <h3 style="color:var(--text-main);">Monthly Profit Analysis</h3>
+                <input type="month" id="dashMonthPicker" class="form-control" style="width: auto; padding: 8px;">
+            </div>
+            <div class="stats-grid mb-2">
+                <div>
+                    <span class="stat-label">Total Earning</span>
+                    <span class="stat-value text-success">₹<span id="dashMonthEarning">0</span></span>
+                </div>
+                <div>
+                    <span class="stat-label">Total Kharcha</span>
+                    <span class="stat-value text-danger">₹<span id="dashMonthExpense">0</span></span>
+                </div>
+            </div>
+            <hr style="border:0; border-top:1px dashed var(--border-color); margin:10px 0;">
+            <div class="flex-between">
+                <strong style="font-size:16px;">Net Profit:</strong>
+                <strong style="font-size:18px; color:var(--primary);">₹<span id="dashNetProfit">0</span></strong>
+            </div>
+        </div>
+        
+        <!-- NEW: Visual Chart Container -->
+        <div class="card">
+            <h3 id="chartTitle" style="margin-bottom:10px;">Monthly Milk Collection Trend</h3>
+
+            <div style="position: relative; height:200px; width:100%;">
+                <canvas id="milkChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. CUSTOMER SCREEN -->
+    <div id="customerScreen" class="screen no-print">
+        <div class="card">
+            <h3>Add New Customer</h3>
+            <div class="form-group">
+                <label>Customer Name</label>
+                <input type="text" id="custName" placeholder="Enter full name">
+            </div>
+            <div class="form-group">
+                <label>WhatsApp Number</label>
+                <input type="number" id="custPhone" placeholder="10-digit mobile number">
+            </div>
+            <div class="form-group">
+                <label>Milk Type</label>
+                <select id="custMilkType" onchange="updateDefaultPriceLabel('add')">
+                    <option value="Cow">🐄 Cow Milk</option>
+                    <option value="Buffalo">🐃 Buffalo Milk</option>
+                </select>
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Morning (L)</label>
+                    <input type="number" id="custMQty" placeholder="0" step="0.25">
+                </div>
+                <div class="form-group">
+                    <label>Evening (L)</label>
+                    <input type="number" id="custEQty" placeholder="0" step="0.25">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Price Setting</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <label style="font-weight: 500; font-size: 14px;">
+                        <input type="radio" name="priceType" value="default" checked onchange="toggleCustomPrice('add')"> Default (<span id="lblDefaultPrice"></span>/L)
+                    </label>
+                    <label style="font-weight: 500; font-size: 14px;">
+                        <input type="radio" name="priceType" value="custom" onchange="toggleCustomPrice('add')"> Custom
+                    </label>
+                </div>
+                <input type="number" id="custCustomPrice" placeholder="Enter custom price" style="display: none;">
+            </div>
+            <button class="btn btn-primary" onclick="addCustomer()">+ Add Customer</button>
+        </div>
+        
+        <h3 class="section-title">Customer List</h3>
+        <div id="customerList"></div>
+    </div>
+
+    <!-- 3. ENTRY SCREEN -->
+    <div id="entryScreen" class="screen no-print">
+        <div class="card top-sticky">
+            <div class="flex-between mb-2">
+                <h3 style="margin:0;">Daily Entry</h3>
+                <input type="date" id="entryDate" class="form-control" style="width: auto; padding: 8px;">
+            </div>
+            <div class="shift-tabs">
+                <div class="shift-tab active" id="tabMorning" onclick="switchShift('Morning')">☀️ Morning</div>
+                <div class="shift-tab" id="tabEvening" onclick="switchShift('Evening')">🌙 Evening</div>
+            </div>
+        </div>
+        <div id="entryCustomerList" style="padding-bottom: 70px;"></div>
+        <button class="btn btn-success floating-btn" onclick="saveShiftEntries()">✓ Save <span id="btnShiftText">Morning</span> Entries</button>
+    </div>
+
+    <!-- 4. KHATA / LEDGER SCREEN -->
+    <div id="ledgerScreen" class="screen no-print">
+        <div class="card top-sticky">
+            <h3 style="margin:0 0 10px 0;">Customer Khata</h3>
+            <p style="font-size:13px; color:var(--text-muted); margin:0;">Yahan sabka advance aur baaki ka hisaab dekhein.</p>
+        </div>
+        <div id="ledgerList"></div>
+    </div>
+
+    <!-- NEW 5. EXPENSE SCREEN -->
+    <div id="expenseScreen" class="screen no-print">
+        <div class="card top-sticky">
+            <h3 style="margin:0 0 10px 0;">Kharcha (Expense Tracker)</h3>
+            <div class="grid-2 mb-2">
+                <input type="date" id="expenseDate" class="form-control">
+                <select id="expenseCategory" class="form-control">
+                    <option value="Pashu Aahar / Chara">Pashu Aahar / Chara</option>
+                    <option value="Medicines">Medicines</option>
+                    <option value="Staff Salary">Staff Salary</option>
+                    <option value="Diesel / Transport">Diesel / Transport</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="grid-2 mb-2">
+                <input type="text" id="expenseNote" class="form-control" placeholder="Details (e.g. 2 Bori)">
+                <input type="number" id="expenseAmount" class="form-control" placeholder="Amount (₹)">
+            </div>
+            <button class="btn btn-danger" onclick="addExpense()">➖ Add Expense</button>
+        </div>
+        
+        <div class="flex-between align-center" style="margin: 20px 5px 10px 5px;">
+            <h3 class="section-title" style="margin:0;">Expense History</h3>
+            <input type="month" id="expenseMonthPicker" class="form-control" style="width: auto; padding: 4px 8px; font-size:13px;">
+        </div>
+        <div id="expenseList"></div>
+    </div>
+
+    <!-- 6. SETTINGS / BACKUP SCREEN -->
+    <div id="backupScreen" class="screen no-print">
+        <div class="card">
+            <div class="flex-between align-center mb-2">
+                <h3 style="margin: 0;">Dairy Info</h3>
+                <button class="btn btn-primary btn-sm" onclick="openEditDairyModal()">✏️ Edit</button>
+            </div>
+            <div class="mb-2">
+                <span style="font-size:12px; color:var(--text-muted);">Dairy Name</span>
+                <div style="font-weight:600;" id="setDairyName"></div>
+            </div>
+            <div class="grid-2">
+                <div>
+                    <span style="font-size:12px; color:var(--text-muted);">Cow Rate</span>
+                    <div style="font-weight:600;">₹<span id="setCowPrice"></span>/L</div>
+                </div>
+                <div>
+                    <span style="font-size:12px; color:var(--text-muted);">Buffalo Rate</span>
+                    <div style="font-weight:600;">₹<span id="setBuffPrice"></span>/L</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Data Backup</h3>
+            <div class="grid-2">
+                <button class="btn btn-outline" onclick="exportData()">📤 Export Data</button>
+                <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">📥 Import Data</button>
+            </div>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+            
+            <hr style="border: 0; border-top: 1px dashed var(--border-color); margin: 25px 0 15px 0;">
+            <h3 style="color: var(--danger);">Danger Zone</h3>
+            <button class="btn btn-danger" onclick="resetAppData()" style="margin-top:10px;">🗑️ Erase All Data</button>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    
+    <!-- Ledger Detail / Payment Modal (UPDATED FOR PDF) -->
+    <div id="ledgerDetailModal" class="modal no-print">
+        <div class="modal-content" style="background: var(--bg-color);">
+            <span class="close" onclick="closeLedgerDetailModal()">&times;</span>
+            <h3 id="ledgerModalName" style="margin-bottom: 5px;">Customer Name</h3>
+            
+            <div class="card" style="margin-top: 15px; text-align: center;">
+                <p style="font-size: 14px; color: var(--text-muted);">Current Balance</p>
+                <h2 id="ledgerModalBalance" style="margin: 5px 0;">₹0</h2>
+                <span id="ledgerModalBadge" class="status-badge"></span>
+            </div>
+
+            <div class="card">
+                <h4 style="margin-bottom: 10px;">Add New Payment (Jama)</h4>
+                <div class="grid-2 mb-2">
+                    <input type="number" id="paymentAmount" class="form-control" placeholder="Amount (₹)">
+                    <input type="date" id="paymentDate" class="form-control">
+                </div>
+                <button class="btn btn-success" onclick="savePayment()">💰 Save Payment</button>
+            </div>
+
+            <div class="card">
+                <h4 style="margin-bottom: 10px;">Generate Bill</h4>
+                <input type="month" id="ledgerBillMonth" class="form-control mb-2">
+                <div id="ledgerBillPreview" style="font-size: 13px; color: var(--text-muted); background: #F9FAFB; padding: 10px; border-radius: 8px; margin-bottom:10px;"></div>
+                
+                <div class="grid-2">
+                    <!-- NEW: Download PDF Button -->
+                    <button class="btn btn-outline" style="font-size:13px;" onclick="generatePDFBill()">📄 PDF Bill</button>
+                    <!-- UPDATED: Share on WhatsApp Button -->
+                    <button class="btn btn-primary" style="font-size:13px;" onclick="generateAndShareBill()">💬 WhatsApp</button>
+                </div>
+            </div>
+            
+            <h4 class="section-title">Payment History</h4>
+            <div id="paymentHistoryList"></div>
+        </div>
+    </div>
+
+    <!-- Edit Dairy Modal -->
+    <div id="editDairyModal" class="modal no-print">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditDairyModal()">&times;</span>
+            <h3 class="mb-2">Edit Dairy Info</h3>
+            <div class="form-group">
+                <label>Dairy Name</label>
+                <input type="text" id="editDairyNameInput">
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Cow Rate (₹/L)</label>
+                    <input type="number" id="editCowPriceInput">
+                </div>
+                <div class="form-group">
+                    <label>Buffalo Rate (₹/L)</label>
+                    <input type="number" id="editBuffPriceInput">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveDairyInfo()">Save Changes</button>
+        </div>
+    </div>
+
+    <!-- Edit Customer Modal -->
+    <div id="editModal" class="modal no-print">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h3 class="mb-2">Edit Customer</h3>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="editCustName">
+            </div>
+            <div class="form-group">
+                <label>WhatsApp</label>
+                <input type="number" id="editCustPhone">
+            </div>
+            <div class="form-group">
+                <label>Milk Type</label>
+                <select id="editCustMilkType">
+                    <option value="Cow">🐄 Cow Milk</option>
+                    <option value="Buffalo">🐃 Buffalo Milk</option>
+                </select>
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Morning Qty (L)</label>
+                    <input type="number" id="editCustMQty" step="0.25">
+                </div>
+                <div class="form-group">
+                    <label>Evening Qty (L)</label>
+                    <input type="number" id="editCustEQty" step="0.25">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Price/Liter (₹)</label>
+                <input type="number" id="editCustPrice">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="editCustStatus">
+                    <option value="active">🟢 Active (Chalu Hai)</option>
+                    <option value="inactive">🔴 Inactive (Band Hai)</option>
+                </select>
+            </div>
+            <button class="btn btn-primary mb-2" onclick="saveEditCustomer()">Save Changes</button>
+            <button class="btn btn-outline mb-2" onclick="openHistoryModal()">📋 View Milk History</button>
+            <button class="btn btn-danger" onclick="deleteCustomer()">Delete Customer</button>
+        </div>
+    </div>
+
+    <!-- Milk History Modal -->
+    <div id="historyModal" class="modal no-print">
+        <div class="modal-content">
+            <span class="close" onclick="closeHistoryModal()">&times;</span>
+            <h3 id="historyCustomerName" class="mb-2">Milk History</h3>
+            <input type="month" id="historyMonthPicker" class="form-control mb-2">
+            <div id="historyDataList" class="history-container"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Success!</div>
+
+    <!-- NEW: Hidden PDF Template container -->
+    <div style="display:none;">
+        <div id="pdfBillContainer" style="padding: 20px; font-family: 'Inter', sans-serif; color: #000; background: #fff; max-width: 800px; margin: 0 auto;">
+            <!-- The Javascript will build the invoice structure here dynamically -->
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION (6 Tabs for Play Store Layout) -->
+    <div class="bottom-nav no-print" id="bottomNav" style="display:none;">
+        <div class="nav-item active" onclick="switchTab('dashboardScreen', 'Dashboard', this)">
+            <div class="nav-icon">📊</div><span>Home</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('customerScreen', 'Clients', this)">
+            <div class="nav-icon">👥</div><span>Clients</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('entryScreen', 'Daily Entry', this)">
+            <div class="nav-icon">📝</div><span>Entry</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('ledgerScreen', 'Khata', this)">
+            <div class="nav-icon">📒</div><span>Khata</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('expenseScreen', 'Kharche', this)">
+            <div class="nav-icon">💸</div><span>Kharcha</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('backupScreen', 'Settings', this)">
+            <div class="nav-icon">⚙️</div><span>Settings</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Check if Service Worker is supported
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registered!', reg))
+                    .catch(err => console.error('Service Worker Registration Failed!', err));
+            });
+        }
+    </script>
+</body>
+</html>
