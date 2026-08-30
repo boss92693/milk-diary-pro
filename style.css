@@ -15,10 +15,10 @@ body { background-color: var(--bg-color); color: var(--text-main); padding-botto
 header { 
     background: var(--primary); 
     color: white; 
-    padding: 14px 20px; 
+    padding: 15px 20px; 
     display: flex; 
     align-items: center; 
-    justify-content: center; 
+    justify-content: center; /* Naam ko bilkul center me rakhega */
     position: sticky; 
     top: 0; 
     z-index: 90;
@@ -28,18 +28,22 @@ header {
 
 .header-logo { 
     position: absolute; 
-    left: 16px; 
-    width: 34px; 
-    height: 34px; 
+    left: 20px; /* Logo ko left me fix kar dega */
+    width: 35px; 
+    height: 35px; 
     border-radius: 8px; 
     object-fit: cover;
-    display: block;
 }
 
 #headerTitle {
     font-size: 20px;
     font-weight: 700;
+    padding: 0 45px; /* Logo se takrane nahi dega (Safe space) */
+    white-space: nowrap; /* Text ko ek line me rakhega */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Agar screen chhoti hui toh naam ke aage ... lag jayega */
 }
+
 
 .screen { display: none; padding: 15px; animation: fadeIn 0.3s ease-in-out; }
 .screen.active { display: block; }
