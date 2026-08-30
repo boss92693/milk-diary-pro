@@ -82,7 +82,8 @@ function switchTab(screenId, title, element) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById(screenId).classList.add('active');
     element.classList.add('active');
-    document.getElementById('appHeader').innerText = title;
+    document.getElementById('headerTitle').innerText = title;
+
 
     if(screenId === 'dashboardScreen') { updateDashboard(); updateChart(); }
     if(screenId === 'customerScreen') { renderCustomers(); updateDefaultPriceLabel('add'); }
