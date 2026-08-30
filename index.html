@@ -230,8 +230,8 @@
                 <button class="btn btn-outline" onclick="exportData()">📤 Export Data</button>
                 <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">📥 Import Data</button>
             </div>
-            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
-            
+            <input type="file" id="importFile" accept=".json, application/json" style="display:none;" onchange="importData(event)">
+
             <hr style="border: 0; border-top: 1px dashed var(--border-color); margin: 25px 0 15px 0;">
             <h3 style="color: var(--danger);">Danger Zone</h3>
             <button class="btn btn-danger" onclick="resetAppData()" style="margin-top:10px;">🗑️ Erase All Data</button>
