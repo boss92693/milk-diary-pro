@@ -527,7 +527,7 @@ function generateAndShareBill() {
     let milkIcon = cust.milkType === 'Cow' ? '🐄' : '🐃';
     
     let msg = `Hello ${cust.name},\n\n*${appSettings.dairyName}* Milk Bill - *${monthName}*\n\n${milkIcon} Is Mahine ka Milk: *${totalMilk} L*\n💰 Is Mahine ka Bill: *₹${monthBill}*\n\n`;
-    if(netBalance > 0) msg += `🛑 *Pichla sab milakar apka Total Baaki: ₹${netBalance} hai.*\n\nPlease clear the dues. Thank you!`;
+    if(netBalance > 0) msg += `🛑 *total jo apko dena hai : ₹${netBalance} hai.*\n\nPlease clear the dues. Thank you!`;
     else if(netBalance < 0) msg += `✅ *Aapka Total Advance ₹${Math.abs(netBalance)} jama hai.*`;
     else msg += `✅ *Aapka pichla saara hisaab clear hai.*`;
     
