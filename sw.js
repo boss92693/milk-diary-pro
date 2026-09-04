@@ -1,4 +1,4 @@
-const CACHE_NAME = 'milk-diary-pro-v2';
+const CACHE_NAME = 'milk-diary-pro-v2.1';
 const urlsToCache = [
   './',
   './index.html',
