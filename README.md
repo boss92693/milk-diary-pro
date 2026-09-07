@@ -36,7 +36,7 @@ The app comes with a **60-Day Free Trial**. To unlock the app after the trial ex
 2. Note down your unique **Device ID** (Request Code).
 3. Click on the **"✈️ Get Activation Key"** button or contact the admin directly.
 
-📩 **Contact Admin on Telegram:** [https://t.me/YOUR_TELEGRAM_USERNAME](https://t.me/YOUR_TELEGRAM_USERNAME)
+📩 **Contact Admin on Telegram:** [https://t.me/YOUR_TELEGRAM_USERNAME](https://t.me/Milkdiarypro)
 
 ## ⚠️ Disclaimer
 
