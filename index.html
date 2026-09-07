@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+< lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -229,7 +229,24 @@
         </div>
     </div>
 
-    <!-- MODALS -->
+       <!-- MODALS -->
+    
+    <!-- 5 Days Expiry Warning Box -->
+    <div id="expiryWarningModal" class="setup-overlay" style="display: none; z-index: 9999;">
+        <div class="card setup-card" style="position: relative; text-align: center;">
+            <!-- X Button (Right Corner) -->
+            <span style="position: absolute; top: 10px; right: 15px; font-size: 22px; cursor: pointer; color: var(--text-muted); font-weight: bold;" onclick="document.getElementById('expiryWarningModal').style.display='none'">&times;</span>
+            
+            <h2 style="color: var(--warning); margin-bottom: 10px; font-size: 22px;">⚠️ Plan Expiring Soon!</h2>
+            <p style="color: var(--text-main); font-size: 14px; margin-bottom: 15px;">
+                Aapka subscription <strong id="warningDaysLeft" style="color: var(--danger); font-size: 16px;">X</strong> din me khatam hone wala hai. Kripya samay par naya plan activate karein.
+            </p>
+            <button class="btn btn-outline" style="width: 100%; border-color: var(--primary); color: var(--primary);" onclick="document.getElementById('expiryWarningModal').style.display='none'; switchTab('backupScreen', 'Settings', document.querySelectorAll('.nav-item')[5]);">
+                Recharge Now
+            </button>
+        </div>
+    </div>
+
     <div id="ledgerDetailModal" class="modal no-print">
         <div class="modal-content">
             <span class="close" onclick="closeLedgerDetailModal()">&times;</span>
@@ -273,4 +290,5 @@
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); }); }
     </script>
 </body>
-</html>                                                                                                                                                                     
+</html>
+                                                                                                                                                                     

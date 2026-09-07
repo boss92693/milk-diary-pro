@@ -2,7 +2,7 @@
 const SECRET_SALT = "M1lk@D1ary#Pr0_Secure!2026";
 let securityData = JSON.parse(localStorage.getItem('milk_security')) || null;
 let currentLang = localStorage.getItem('milk_lang') || 'en';
-if(currentLang === 'hg') currentLang = 'en'; // Hinglish ko English me convert karega
+if(currentLang === 'hg') currentLang = 'en'; // Hinglish hata diya gaya hai
 
 let appSettings = JSON.parse(localStorage.getItem('milk_settings')) || { isSetupComplete: false };
 let customers = JSON.parse(localStorage.getItem('milk_customers')) || [];
@@ -68,6 +68,7 @@ function showForgotPin() { if(!securityData.securityQuestion) return alert("Secu
 function cancelForgotPin() { document.getElementById('pinEntryArea').style.display = "block"; document.getElementById('forgotPinArea').style.display = "none"; document.getElementById('secAnswerInput').value = ""; }
 function verifySecurityAnswer() { let a = document.getElementById('secAnswerInput').value.trim().toLowerCase(), c = (securityData.securityAnswer||"").trim().toLowerCase(); if(a === c && a) { securityData.isLockEnabled = false; securityData.appPIN = null; saveSecurity(); alert("✅ Correct! App unlocked. Please setup new PIN."); document.getElementById('lockScreen').style.display = "none"; document.getElementById('secAnswerInput').value = ""; cancelForgotPin(); loadApp(); } else alert("❌ Incorrect Answer!"); }
 
+// UPDATED LOADAPP() WITH WARNING LOGIC
 function loadApp() {
     document.getElementById('appHeader').style.display = "flex"; document.getElementById('bottomNav').style.display = "flex";
     document.getElementById('displayDairyName').innerText = appSettings.dairyName; document.getElementById('setDairyName').innerText = appSettings.dairyName;
@@ -76,12 +77,25 @@ function loadApp() {
     document.getElementById('dashMonthPicker').value = getCurrentMonth(); document.getElementById('entryDate').value = getTodayDate();
     document.getElementById('paymentDate').value = getTodayDate(); document.getElementById('expenseDate').value = getTodayDate(); document.getElementById('expenseMonthPicker').value = getCurrentMonth();
     document.getElementById('dashMonthPicker').addEventListener('change', updateDashboard); document.getElementById('entryDate').addEventListener('change', renderEntryScreen); document.getElementById('expenseMonthPicker').addEventListener('change', renderExpenses);
+    
     applyLanguage(); updateSettingsUI(); 
     
-    if (securityData.expiryDate !== "LIFETIME" && getTodayDate() > securityData.expiryDate) {
-        alert("⚠️ Your subscription has expired! Please activate a plan to continue using the app.");
-        switchTab('backupScreen', 'Settings', document.querySelectorAll('.nav-item')[5]); 
-    } else { switchTab('dashboardScreen', 'Dashboard', document.querySelector('.nav-item.active')); }
+    if (securityData.expiryDate !== "LIFETIME") {
+        let diffDays = Math.ceil((new Date(securityData.expiryDate) - new Date(getTodayDate())) / (1000*60*60*24));
+        
+        if (diffDays < 0) {
+            alert("⚠️ Your subscription has expired! Please activate a plan to continue using the app.");
+            switchTab('backupScreen', 'Settings', document.querySelectorAll('.nav-item')[5]); 
+        } else {
+            switchTab('dashboardScreen', 'Dashboard', document.querySelector('.nav-item.active')); 
+            if (diffDays <= 5 && diffDays >= 0) {
+                document.getElementById('warningDaysLeft').innerText = diffDays;
+                document.getElementById('expiryWarningModal').style.display = "flex";
+            }
+        }
+    } else { 
+        switchTab('dashboardScreen', 'Dashboard', document.querySelector('.nav-item.active')); 
+    }
 }
 function completeSetup() { let n=document.getElementById('setupDairyName').value, c=document.getElementById('setupCowPrice').value, b=document.getElementById('setupBuffaloPrice').value; if(!n||!c||!b) return alert("Sari details bharein!"); appSettings = { isSetupComplete: true, dairyName: n, cowPrice: parseFloat(c), buffaloPrice: parseFloat(b) }; saveData(); document.getElementById('setupScreen').style.display="none"; loadApp(); }
 
@@ -227,21 +241,30 @@ function activateApp() {
     saveSecurity(); updateSettingsUI(); document.getElementById('activationKeyInput').value = "";
     if(t <= securityData.expiryDate || securityData.expiryDate === "LIFETIME") location.reload();
 }
-function toggleLockSetting() { if(document.getElementById('toggleAppLock').checked) { document.getElementById('pinSetupBox').style.display = "block"; document.getElementById('pinEditBox').style.display = "none"; } else { if(securityData.appPIN){ let ep = prompt("Lock disable karne ke liye apna 4-digit PIN dalein:"); if(ep !== securityData.appPIN){ if(ep !== null) alert("❌ Incorrect PIN!"); document.getElementById('toggleAppLock').checked = true; return; } } if(confirm("Disable App Lock?")) { securityData.isLockEnabled = false; saveSecurity(); updateSettingsUI(); showToast("Lock Disabled"); } else { document.getElementById('toggleAppLock').checked = true; } } }
-function saveNewPin() { let p=document.getElementById('newPinInput').value, q=document.getElementById('secQuestionSelect').value, a=document.getElementById('secAnswerSetup').value; if(p.length!==4) return alert("Enter exactly 4 digits for PIN"); if(!a) return alert("Enter security answer!"); securityData.appPIN=p; securityData.securityQuestion=q; securityData.securityAnswer=a; securityData.isLockEnabled=true; saveSecurity(); updateSettingsUI(); document.getElementById('newPinInput').value=""; document.getElementById('secAnswerSetup').value=""; showToast("Lock Enabled!"); }
-function updateExistingPin() { 
-    // Pehle purana PIN pucho
-    let oldPin = prompt("PIN change karne ke liye apna PURANA (Current) 4-digit PIN dalein:");
-    
-    // Agar user cancel kar de
-    if(oldPin === null) return; 
-    
-    // Agar purana PIN galat ho
-    if(oldPin !== securityData.appPIN) {
-        return alert("❌ Incorrect Current PIN! Update cancelled.");
-    }
 
-    // Agar purana PIN sahi hai, toh naya PIN check aur save karo
+function toggleLockSetting() { 
+    if(document.getElementById('toggleAppLock').checked) { 
+        document.getElementById('pinSetupBox').style.display = "block"; document.getElementById('pinEditBox').style.display = "none"; 
+    } else { 
+        if(securityData.appPIN){ 
+            let ep = prompt("Lock disable karne ke liye apna 4-digit PIN dalein:"); 
+            if(ep !== securityData.appPIN){ 
+                if(ep !== null) alert("❌ Incorrect PIN!"); 
+                document.getElementById('toggleAppLock').checked = true; return; 
+            } 
+        } 
+        if(confirm("Disable App Lock?")) { securityData.isLockEnabled = false; saveSecurity(); updateSettingsUI(); showToast("Lock Disabled"); } 
+        else { document.getElementById('toggleAppLock').checked = true; } 
+    } 
+}
+
+function saveNewPin() { let p=document.getElementById('newPinInput').value, q=document.getElementById('secQuestionSelect').value, a=document.getElementById('secAnswerSetup').value; if(p.length!==4) return alert("Enter exactly 4 digits for PIN"); if(!a) return alert("Enter security answer!"); securityData.appPIN=p; securityData.securityQuestion=q; securityData.securityAnswer=a; securityData.isLockEnabled=true; saveSecurity(); updateSettingsUI(); document.getElementById('newPinInput').value=""; document.getElementById('secAnswerSetup').value=""; showToast("Lock Enabled!"); }
+
+function updateExistingPin() { 
+    let oldPin = prompt("PIN change karne ke liye apna PURANA (Current) 4-digit PIN dalein:");
+    if(oldPin === null) return; 
+    if(oldPin !== securityData.appPIN) return alert("❌ Incorrect Current PIN! Update cancelled.");
+    
     let np = document.getElementById('editPinInput').value; 
     if(np.length !== 4) return alert("Naye PIN ke liye exactly 4 digits dalein"); 
     
@@ -262,21 +285,13 @@ function importData(e) {
         try { let d = JSON.parse(ev.target.result); if(d.milk_security) { if(d.milk_security.checksum !== getHash(d.milk_security.deviceID+d.milk_security.installDate+d.milk_security.expiryDate+d.milk_security.activationCount)) return alert("❌ Backup Corrupted!"); } localStorage.setItem('milk_settings', JSON.stringify(d.milk_settings)); localStorage.setItem('milk_customers', JSON.stringify(d.milk_customers)); localStorage.setItem('milk_entries', JSON.stringify(d.milk_entries)); localStorage.setItem('milk_transactions', JSON.stringify(d.milk_transactions)); localStorage.setItem('milk_expenses', JSON.stringify(d.milk_expenses||[])); if(d.milk_security) localStorage.setItem('milk_security', JSON.stringify(d.milk_security)); alert("Restored Successfully!"); location.reload(); } catch(err) { alert("Invalid File"); }
     }; r.readAsText(f);
 }
+
 function resetAppData() { 
-    // Agar App Lock chalu hai, toh pehle PIN mango
     if (securityData && securityData.isLockEnabled && securityData.appPIN) {
         let enteredPin = prompt("App reset karne ke liye apna 4-digit PIN dalein:");
-        
-        // Agar user cancel kar de
         if (enteredPin === null) return; 
-        
-        // Agar PIN galat ho
-        if (enteredPin !== securityData.appPIN) {
-            return alert("❌ Incorrect PIN! Reset cancelled.");
-        }
+        if (enteredPin !== securityData.appPIN) return alert("❌ Incorrect PIN! Reset cancelled.");
     }
-    
-    // Final Warning
     if(confirm("⚠️ DANGER: Kya aap sach me saara data delete karna chahte hain? Ye wapas nahi aayega!")) { 
         localStorage.clear(); 
         location.reload(); 
